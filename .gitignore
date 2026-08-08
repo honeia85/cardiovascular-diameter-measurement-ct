@@ -1,0 +1,32 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+.DS_Store
+
+# Medical images and derived run artifacts
+out/
+output/
+outputs/
+pipeline.log
+pipeline_out/
+totalseg/
+*.nii
+*.nii.gz
+*.dcm
+*.dicom
+*.nrrd
+*.mha
+*.mhd
+*.mrk.json
+*_measurements.json
+
+# Credentials and private keys
+*.pem
+*.key
+credentials.*
+secrets.*

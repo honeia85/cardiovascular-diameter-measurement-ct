@@ -1,0 +1,28 @@
+# Requires Python 3.12.x; the runtime guard rejects other minor versions.
+# Install torch from the cu118 index BEFORE this file, or a CPU-only wheel is used:
+#   pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu118
+# See README.md for setup, model weights, and reproducibility notes.
+
+# measurement
+numpy==2.2.6
+scipy==1.16.2
+opencv-python==4.12.0.88
+scikit-image==0.25.2
+scikit-learn==1.7.2
+pandas==2.3.3
+nibabel==5.3.2
+
+# segmentation
+TotalSegmentator==2.12.0
+nnunetv2==2.6.4
+torch==2.5.1
+torchvision==0.20.1
+SimpleITK==2.5.3
+
+# nnU-Net ecosystem: pinned to the verified environment (affects inference output)
+acvl-utils==0.2.5
+dynamic-network-architectures==0.4.3
+batchgenerators==0.25.1
+batchgeneratorsv2==0.3.0
+connected-components-3d==3.26.1
+einops==0.8.2
