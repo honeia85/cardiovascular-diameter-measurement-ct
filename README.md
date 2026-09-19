@@ -71,14 +71,15 @@ were not retained and are unavailable.
 
 ## Setup
 
-Requires **Python 3.12.x**. The study environment used 3.12.12 and the clean Colab smoke test
-used 3.12.13; the patch version is not fixed.
+Requires **Python 3.12.x**. The retained earlier environment used 3.12.12 and the clean Colab
+smoke test used 3.12.13; the patch version is not fixed. The installation example below records
+the earlier RTX 4090 environment, not the RTX 5090 Laptop revision run.
 
 ```bash
 conda create -n med_seg python=3.12 -y
 conda activate med_seg
 
-# Exact GPU stack used for the published measurements (CUDA 11.8):
+# Historical RTX 4090 setup (CUDA 11.8), not the RTX 5090 Laptop revision environment:
 pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu118
 
 pip install -r requirements.txt
@@ -88,7 +89,8 @@ pip install -r requirements.txt
 totalseg_set_license -l <YOUR_LICENSE>
 ```
 
-The commands above reproduce the study's CUDA 11.8 environment. The Colab notebook instead checks for
+The commands above use the retained RTX 4090-era pins in `requirements.txt`. They are not a
+verified RTX 5090 Laptop installation recipe. The Colab notebook instead checks for
 the separately validated Colab-compatible torch 2.5.1 CUDA build (the clean T4 smoke test used
 `torch 2.5.1+cu124`); that mechanics demonstration is not a claim of bit-identical CUDA inference.
 `totalseg_set_license` persists the supplied key in `~/.totalsegmentator/config.json`. On a local
@@ -182,7 +184,16 @@ application of the frozen rules, not parameter derivation.
 
 ## Reproducibility
 
-Environment used to produce the published results:
+The **reported revision evaluation run used an NVIDIA RTX 5090 Laptop GPU**, release v1.0.4,
+and serial mask export. The earlier comparison run used an RTX 4090 and the v1.0.2 export
+setting. These are different runs; the supplement and deposited
+`run_logs/diameters_vs_earlier_gpu.csv` report their measurement differences.
+
+The retained environment pins below describe the **earlier RTX 4090 setup**. They do not
+establish the exact PyTorch/CUDA build used for the RTX 5090 Laptop revision run. The
+measurement-only reproduction from deposited label maps is verified separately on CPU.
+
+Earlier RTX 4090 environment:
 
 | Item | Value |
 |---|---|
@@ -192,8 +203,13 @@ Environment used to produce the published results:
 | GPU | NVIDIA RTX 4090, CUDA 11.8 |
 | Task | `heartchambers_highres` (task_id 301), 3d_fullres, fold 0, nnUNetTrainer |
 
-Version pins in `requirements.txt` are exact (`==`) for this reason. Relax them to `>=` only if
-reproducing the published numbers is not a requirement.
+Version pins in `requirements.txt` retain this historical environment and are unchanged in
+the frozen v1.0.4 release. To reproduce the reported diameters, use the deposited label maps
+with the pinned measurement dependencies; matching GPU hardware or historical inference
+pins alone does not guarantee identical segmentation outputs.
+
+This hardware-provenance clarification updates the current README only. The frozen v1.0.4
+tag, Zenodo code archive, computation code, and deposited measurements are unchanged.
 
 ### Model weights
 
