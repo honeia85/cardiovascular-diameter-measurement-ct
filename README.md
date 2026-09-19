@@ -18,11 +18,11 @@ This is the measurement-pipeline code accompanying the manuscript:
 > Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT: A Retrospective
 > Reader-Referenced Agreement Study.** (BMC Medical Imaging, under revision)
 
-Public study release: **v1.0.4** — Zenodo DOI pending. This is the release that
+Public study release: **v1.0.4** — [Zenodo DOI: 10.5281/zenodo.22761761](https://doi.org/10.5281/zenodo.22761761). This is the release that
 produced the published measurements; it differs from v1.0.2 (commit 8be2f50) in serialising
 segmentation-mask export and in accepting a label map without a CT (see [CHANGELOG.md](CHANGELOG.md)).
 Companion evaluation dataset (reader markups, automated measurements, the merged label map of each
-examination, run logs, TCIA crosswalk, overlap flag): Zenodo DOI pending. See [Citation](#citation).
+examination, run logs, TCIA crosswalk, overlap flag): [Zenodo DOI: 10.5281/zenodo.22761765](https://doi.org/10.5281/zenodo.22761765). See [Citation](#citation).
 
 The repository contains **code only**. It contains no imaging data, no derived measurement
 tables, and no model weights. See [Reproducibility](#reproducibility) for the pinned
@@ -216,7 +216,7 @@ Two levels of reproduction are possible:
    reader markups, automated measurements, measurement table, data dictionary, exclusion log, the
    118-row case-to-TCIA-series crosswalk, the development-overlap flag, and the analysis script that
    regenerates every statistic in the manuscript — are deposited on Zenodo under CC BY-NC 4.0
-   (dataset DOI to be added after publication). They are not in this repository. Development-cohort R1
+   (dataset DOI: 10.5281/zenodo.22761765). They are not in this repository. Development-cohort R1
    measurements are unavailable.
 2. **End-to-end reproduction (CT → measurements).** Install this pipeline and TotalSegmentator,
    obtain the 118 source series yourself from The Cancer Imaging Archive using the SeriesInstanceUIDs
@@ -263,12 +263,12 @@ If you use this code, please cite the archived release and the manuscript; if yo
 data, please also cite the companion dataset:
 
 > Je J, Shim H, Nam Y, Kim Y, Kim BW, Hong P. Cardiovascular Diameter Auto-Measurement Pipeline
-> (v1.0.4) [Software]. Zenodo. DOI to be added after publication.
+> (v1.0.4) [Software]. Zenodo. DOI: 10.5281/zenodo.22761761.
 
 > Je J, Shim H, Nam Y, Kim Y, Kim BW, Hong P. Evaluation-cohort data for "Rule-Based Automated
 > Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on
 > Non-ECG-Gated Contrast-Enhanced Chest CT" (Version 1.0) [Data set]. Zenodo.
-> DOI to be added after publication.
+> DOI: 10.5281/zenodo.22761765.
 
 A `CITATION.cff` file is included; GitHub renders it under "Cite this repository". Changes between
 releases are listed in `CHANGELOG.md`.

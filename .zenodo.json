@@ -3,7 +3,7 @@
   "upload_type": "software",
   "version": "v1.0.4",
   "license": "mit",
-  "description": "Measurement-pipeline code accompanying the manuscript 'Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT: A Retrospective Reader-Referenced Agreement Study' (BMC Medical Imaging, under revision). Takes an axis-aligned LPS+ chest CT (NIfTI), runs the public pretrained TotalSegmentator heartchambers_highres model (not redistributed), and applies fixed rule-based level selection, centerline construction, and diameter selection to produce the diameters of PT, RPA, LPA, AA, LA, LV, RA, and RV with 3D Slicer markups. The repository contains code only: no imaging data, no derived measurement tables, and no model weights. v1.0.4 is the release that produced the measurements reported in the manuscript. Relative to v1.0.2, the release cited in the submitted manuscript, it serializes TotalSegmentator's mask export so that whether an examination completes no longer depends on host memory, and it measures a merged label map with no CT present. The documentation additionally discloses the development–evaluation overlap. The companion evaluation dataset is deposited separately on Zenodo; its DOI will be added after publication.",
+  "description": "Measurement-pipeline code accompanying the manuscript 'Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT: A Retrospective Reader-Referenced Agreement Study' (BMC Medical Imaging, under revision). Takes an axis-aligned LPS+ chest CT (NIfTI), runs the public pretrained TotalSegmentator heartchambers_highres model (not redistributed), and applies fixed rule-based level selection, centerline construction, and diameter selection to produce the diameters of PT, RPA, LPA, AA, LA, LV, RA, and RV with 3D Slicer markups. The repository contains code only: no imaging data, no derived measurement tables, and no model weights. v1.0.4 is the release that produced the measurements reported in the manuscript. Relative to v1.0.2, the release cited in the submitted manuscript, it serializes TotalSegmentator's mask export so that whether an examination completes no longer depends on host memory, and it measures a merged label map with no CT present. The documentation additionally discloses the development–evaluation overlap. The companion evaluation dataset is deposited separately on Zenodo (10.5281/zenodo.22761765).",
   "creators": [
     {
       "name": "Je, Jeongmo",
@@ -51,6 +51,11 @@
       "identifier": "https://github.com/honeia85/cardiovascular-diameter-measurement-ct/tree/v1.0.4",
       "relation": "isSupplementTo",
       "scheme": "url"
+    },
+    {
+      "identifier": "10.5281/zenodo.22761765",
+      "relation": "isSupplementedBy",
+      "scheme": "doi"
     },
     {
       "identifier": "10.7937/VTW4-X588",

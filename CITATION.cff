@@ -6,6 +6,7 @@ version: v1.0.4
 date-released: "2026-09-17"
 license: MIT
 repository-code: "https://github.com/honeia85/cardiovascular-diameter-measurement-ct"
+doi: "10.5281/zenodo.22761761"
 authors:
   - family-names: Je
     given-names: Jeongmo
@@ -36,7 +37,7 @@ preferred-citation:
   title: "Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT: A Retrospective Reader-Referenced Agreement Study"
   journal: "BMC Medical Imaging"
   year: 2026
-  notes: "under revision; DOI to be added on publication"
+    notes: "under revision"
   authors:
     - family-names: Je
       given-names: Jeongmo
@@ -54,6 +55,7 @@ references:
   - type: data
     title: "Evaluation-cohort data for \"Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT\""
     version: "1.0"
+    doi: "10.5281/zenodo.22761765"
     year: 2026
     authors:
       - family-names: Je
