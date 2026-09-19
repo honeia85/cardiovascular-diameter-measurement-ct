@@ -19,10 +19,17 @@ This is the measurement-pipeline code accompanying the manuscript:
 > Reader-Referenced Agreement Study.** (BMC Medical Imaging, under revision)
 
 Public study release: **v1.0.4** — [Zenodo DOI: 10.5281/zenodo.22761761](https://doi.org/10.5281/zenodo.22761761). This is the release that
-produced the published measurements; it differs from v1.0.2 (commit 8be2f50) in serialising
+produced the deposited measurements; it differs from v1.0.2 (commit 8be2f50) in serialising
 segmentation-mask export and in accepting a label map without a CT (see [CHANGELOG.md](CHANGELOG.md)).
 Companion evaluation dataset (reader markups, automated measurements, the merged label map of each
-examination, run logs, TCIA crosswalk, overlap flag): [Zenodo DOI: 10.5281/zenodo.22761765](https://doi.org/10.5281/zenodo.22761765). See [Citation](#citation).
+examination, run logs, TCIA crosswalk, overlap flag): **v1.0.1**, [Zenodo DOI: 10.5281/zenodo.22842865](https://doi.org/10.5281/zenodo.22842865). See [Citation](#citation).
+
+Dataset v1.0.1 corrects documentation only. Measurements, markups, label maps, analysis scripts,
+and numerical results are unchanged from v1.0. It clarifies that the archive contains 48
+pre-correction coordinate files from six examinations and adds `SUPPLEMENT_TABLE_MAP.md`
+for the final 14-table supplement. The archived v1.0.4 source README predates this correction;
+use the current dataset README for public-data fields and reproduction commands. The
+measurement code and v1.0.4 tag are unchanged.
 
 The repository contains **code only**. It contains no imaging data, no derived measurement
 tables, and no model weights. See [Reproducibility](#reproducibility) for the pinned
@@ -39,8 +46,8 @@ pipeline on any data.
 > overlap was established by pixel-level comparison; the primary analysis of the manuscript therefore uses
 > the 91 examinations without overlap, with the assembled 118 and the MIDRC-RICORD-only 76 as sensitivity
 > sets. The affected examinations are flagged in the companion dataset
-> (`crosswalk_118_pixel_verified.csv`, columns `dev_overlap_LungCT_Diagnosis_PatientID` and
-> `dev_overlap_match_type`). See
+> (`crosswalk_118_pixel_verified.csv`, column `dev_overlap_match_type`). Development PatientID
+> values are omitted from the public crosswalk. See
 > [Evaluation data and known development–evaluation overlap](#evaluation-data-and-known-developmentevaluation-overlap).
 
 ## Pipeline
@@ -115,7 +122,7 @@ the measurement modules read only the label map and its NIfTI header. Over the 1
 it returns all 944 diameters identical to the deposited values at four decimal places (Linux, central
 processing unit, Python 3.12 with the pinned measurement dependencies, 30-70 s per examination).
 
-About 55 s per case on a GPU (40 s segmentation + 15 s measurement).
+The logged v1.0.4 evaluation rerun had a median runtime of 73.7 s per examination.
 CPU mode does not add TotalSegmentator's `--fast` flag because that mode is incompatible with
 `heartchambers_highres`; it therefore runs the same task but is substantially slower than GPU mode.
 
@@ -214,10 +221,11 @@ Two levels of reproduction are possible:
 
 1. **Statistical reproduction (no images needed).** The derived evaluation-cohort data — corrected
    reader markups, automated measurements, measurement table, data dictionary, exclusion log, the
-   118-row case-to-TCIA-series crosswalk, the development-overlap flag, and the analysis script that
-   regenerates every statistic in the manuscript — are deposited on Zenodo under CC BY-NC 4.0
-   (dataset DOI: 10.5281/zenodo.22761765). They are not in this repository. Development-cohort R1
-   measurements are unavailable.
+   118-row case-to-TCIA-series crosswalk, the development-overlap flag, and scripts for the
+   evaluation-cohort agreement analyses — are deposited on Zenodo under CC BY-NC 4.0
+   (dataset v1.0.1 DOI: 10.5281/zenodo.22842865). They are not in this repository.
+   Development-cohort R1 measurements and separate PE Challenge data are unavailable in the
+   archive. Historical source-image audits require CT volumes obtained separately.
 2. **End-to-end reproduction (CT → measurements).** Install this pipeline and TotalSegmentator,
    obtain the 118 source series yourself from The Cancer Imaging Archive using the SeriesInstanceUIDs
    in the deposited crosswalk, convert and reorient them, then run `run_pipeline.py` and compare with
@@ -230,9 +238,10 @@ QIN LUNG CT (42). Twenty-seven of the QIN LUNG CT examinations are the same CT s
 LungCT-Diagnosis examinations used for rule development — 26 pixel-identical volumes and one partial
 copy — under different TCIA identifiers. The manuscript's primary analysis is therefore restricted to
 the 91 examinations without overlap, and reports the assembled 118 and the MIDRC-RICORD-only 76 as
-sensitivity sets. Users who want a strictly development-independent evaluation set should exclude the
-27 flagged examinations; the flag, the match type and the pixel-fingerprint scripts are in the
-companion dataset.
+sensitivity sets. Exclude the 27 flagged examinations to reproduce the primary cohort without
+identified acquisition overlap. This does not establish patient-level independence or exclude
+overlap with nonpublic segmentation-model training data. The public crosswalk retains the match
+type, not development identifiers; source-image fingerprint checks require the source CT volumes.
 
 The pipeline runs each examination once, without automatic retry, and logs per-examination success or
 failure (`run_pipeline.py`); the batch summary at the end of a run lists successes and failures. Logs of
@@ -267,8 +276,8 @@ data, please also cite the companion dataset:
 
 > Je J, Shim H, Nam Y, Kim Y, Kim BW, Hong P. Evaluation-cohort data for "Rule-Based Automated
 > Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on
-> Non-ECG-Gated Contrast-Enhanced Chest CT" (Version 1.0) [Data set]. Zenodo.
-> DOI: 10.5281/zenodo.22761765.
+> Non-ECG-Gated Contrast-Enhanced Chest CT" (Version 1.0.1) [Data set]. Zenodo.
+> DOI: 10.5281/zenodo.22842865.
 
 A `CITATION.cff` file is included; GitHub renders it under "Cite this repository". Changes between
 releases are listed in `CHANGELOG.md`.

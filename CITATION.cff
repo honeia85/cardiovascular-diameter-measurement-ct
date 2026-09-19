@@ -54,8 +54,8 @@ preferred-citation:
 references:
   - type: data
     title: "Evaluation-cohort data for \"Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT\""
-    version: "1.0"
-    doi: "10.5281/zenodo.22761765"
+    version: "1.0.1"
+    doi: "10.5281/zenodo.22842865"
     year: 2026
     authors:
       - family-names: Je
