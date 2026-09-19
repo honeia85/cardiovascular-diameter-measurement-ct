@@ -5,7 +5,7 @@ plus the derived `PT_AA_ratio` and `RV_LV_ratio`.
 
 Measured structures: `PT`, `RPA`, `LPA`, `AA`, `LA`, `LV`, `RA`, `RV`
 
-**Guided Colab reproduction:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/honeia85/cardiovascular-diameter-measurement-ct/blob/v1.0.2/reproduce_colab.ipynb)
+**Guided Colab reproduction:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/honeia85/cardiovascular-diameter-measurement-ct/blob/v1.0.4/reproduce_colab.ipynb)
 &nbsp;— `reproduce_colab.ipynb` runs the frozen pipeline end-to-end on a public, license-clean sample CT and
 verifies the model-weight checksums. It uses **your own** TotalSegmentator academic license. The
 `totalseg_set_license` command writes that key to `~/.totalsegmentator/config.json` inside the ephemeral
@@ -14,8 +14,15 @@ runtime removes it. This repository does not redistribute weights or data.
 
 This is the measurement-pipeline code accompanying the manuscript:
 
-> **Automated Measurement of Eight Cardiovascular Diameters on Non-ECG-Gated
-> Contrast-Enhanced Chest CT: A Retrospective Reader-Referenced Agreement Study.**
+> **Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained
+> Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT: A Retrospective
+> Reader-Referenced Agreement Study.** (BMC Medical Imaging, under revision)
+
+Public study release: **v1.0.4** — Zenodo DOI pending. This is the release that
+produced the published measurements; it differs from v1.0.2 (commit 8be2f50) in serialising
+segmentation-mask export and in accepting a label map without a CT (see [CHANGELOG.md](CHANGELOG.md)).
+Companion evaluation dataset (reader markups, automated measurements, the merged label map of each
+examination, run logs, TCIA crosswalk, overlap flag): Zenodo DOI pending. See [Citation](#citation).
 
 The repository contains **code only**. It contains no imaging data, no derived measurement
 tables, and no model weights. See [Reproducibility](#reproducibility) for the pinned
@@ -23,9 +30,18 @@ environment and model-weight checksums, and [Licenses and data access](#licenses
 for what you must obtain separately. See [SECURITY.md](SECURITY.md) before running the
 pipeline on any data.
 
-> **Development and evaluation separation.** All rule parameters in this repository were fixed
-> using the LungCT-Diagnosis development cohort. The same implementation was then applied without
-> tuning to the independent reader-referenced evaluation cohort.
+> **Development and evaluation separation — with a known overlap.** All rule parameters in this
+> repository were fixed using the LungCT-Diagnosis development cohort and the same implementation was
+> applied without tuning to the reader-referenced evaluation cohort. **27 of the 118 assembled evaluation
+> examinations (all from QIN LUNG CT) are the same CT series as development examinations** (26 identical
+> volumes and one partial copy): LungCT-Diagnosis and QIN LUNG CT both originate from the H. Lee Moffitt
+> Cancer Center and were de-identified separately by TCIA, so identifiers do not reveal the overlap. The
+> overlap was established by pixel-level comparison; the primary analysis of the manuscript therefore uses
+> the 91 examinations without overlap, with the assembled 118 and the MIDRC-RICORD-only 76 as sensitivity
+> sets. The affected examinations are flagged in the companion dataset
+> (`crosswalk_118_pixel_verified.csv`, columns `dev_overlap_LungCT_Diagnosis_PatientID` and
+> `dev_overlap_match_type`). See
+> [Evaluation data and known development–evaluation overlap](#evaluation-data-and-known-developmentevaluation-overlap).
 
 ## Pipeline
 
@@ -89,7 +105,15 @@ python run_pipeline.py -i ct_lps.nii.gz -o ./out -d cpu # CPU, same high-res tas
 
 # Skip segmentation if a merged label volume already exists
 python run_pipeline.py -i ct_lps.nii.gz -o ./out --seg seg_lps.nii.gz
+
+# Measure a label map with no CT present: no GPU, no TotalSegmentator, measurement dependencies only
+python run_pipeline.py --seg case_T_031_seg.nii.gz -o ./out
 ```
+
+The last form is how the companion dataset's deposited label maps regenerate the published diameters:
+the measurement modules read only the label map and its NIfTI header. Over the 118 deposited label maps
+it returns all 944 diameters identical to the deposited values at four decimal places (Linux, central
+processing unit, Python 3.12 with the pinned measurement dependencies, 30-70 s per examination).
 
 About 55 s per case on a GPU (40 s segmentation + 15 s measurement).
 CPU mode does not add TotalSegmentator's `--fast` flag because that mode is incompatible with
@@ -106,7 +130,7 @@ CPU mode does not add TotalSegmentator's `--fast` flag because that mode is inco
   contains a non-finite affine, or does not match the other volume's first-three-axis shape
   and affine (absolute tolerance `1e-5`). It does not silently repair geometry.
 - **In-plane pixel spacing must be isotropic (spacing[0] == spacing[1]).** This code converts
-  in-plane pixel lengths to millimetres using the first spacing element only. Every examination
+  in-plane pixel lengths to millimeters using the first spacing element only. Every examination
   in the study had equal x- and y-axis spacing, so this did not affect the published results,
   but on an **anisotropic in-plane** input the reported diameters would be wrong. Check your
   header spacing before trusting any output on new data.
@@ -156,7 +180,7 @@ Environment used to produce the published results:
 | Item | Value |
 |---|---|
 | Python | 3.12 |
-| Measurement | numpy 2.2.6, scipy 1.16.2, scikit-learn 1.7.2, scikit-image 0.25.2, pandas 2.3.3 |
+| Measurement | numpy 2.2.6, scipy 1.16.2, scikit-learn 1.7.2, scikit-image 0.25.2, pandas 2.3.3, nibabel 5.3.2, opencv-python 4.12.0.88 |
 | Segmentation | TotalSegmentator 2.12.0, nnunetv2 2.6.4, torch 2.5.1+cu118 |
 | GPU | NVIDIA RTX 4090, CUDA 11.8 |
 | Task | `heartchambers_highres` (task_id 301), 3d_fullres, fold 0, nnUNetTrainer |
@@ -188,14 +212,33 @@ measured diameters in our checks.
 
 Two levels of reproduction are possible:
 
-1. **Statistical reproduction (no images needed).** The derived evaluation-cohort measurements,
-   data dictionary, exclusion log, case-to-series crosswalk with retained NIfTI geometry, and statistical
-   reanalysis code are not in this repository. They are available from the corresponding author on
-   reasonable request under CC BY-NC 4.0, consistent with the source terms. Development-cohort R1
+1. **Statistical reproduction (no images needed).** The derived evaluation-cohort data — corrected
+   reader markups, automated measurements, measurement table, data dictionary, exclusion log, the
+   118-row case-to-TCIA-series crosswalk, the development-overlap flag, and the analysis script that
+   regenerates every statistic in the manuscript — are deposited on Zenodo under CC BY-NC 4.0
+   (dataset DOI to be added after publication). They are not in this repository. Development-cohort R1
    measurements are unavailable.
 2. **End-to-end reproduction (CT → measurements).** Install this pipeline and TotalSegmentator,
-   obtain the source CTs yourself from The Cancer Imaging Archive using the dataset DOIs below and
-   the article's case-to-collection/series crosswalk, then run `run_pipeline.py`.
+   obtain the 118 source series yourself from The Cancer Imaging Archive using the SeriesInstanceUIDs
+   in the deposited crosswalk, convert and reorient them, then run `run_pipeline.py` and compare with
+   the deposited automated markups.
+
+## Evaluation data and known development–evaluation overlap
+
+The evaluation cohort comprises 118 examinations: MIDRC-RICORD-1A (26), MIDRC-RICORD-1B (50), and
+QIN LUNG CT (42). Twenty-seven of the QIN LUNG CT examinations are the same CT series as
+LungCT-Diagnosis examinations used for rule development — 26 pixel-identical volumes and one partial
+copy — under different TCIA identifiers. The manuscript's primary analysis is therefore restricted to
+the 91 examinations without overlap, and reports the assembled 118 and the MIDRC-RICORD-only 76 as
+sensitivity sets. Users who want a strictly development-independent evaluation set should exclude the
+27 flagged examinations; the flag, the match type and the pixel-fingerprint scripts are in the
+companion dataset.
+
+The pipeline runs each examination once, without automatic retry, and logs per-examination success or
+failure (`run_pipeline.py`); the batch summary at the end of a run lists successes and failures. Logs of
+the original study runs were not retained, so all 118 evaluation examinations were re-run under v1.0.4
+with logging: every one returned all eight diameters on the first pass (`run_logs/run_summary.json` of
+the companion dataset).
 
 ## Licenses and data access
 
@@ -213,6 +256,22 @@ You must obtain the following **separately**; none of them are redistributed her
 
 TotalSegmentator citation: Wasserthal et al., *Radiology: Artificial Intelligence* (2023),
 <https://pubs.rsna.org/doi/10.1148/ryai.230024>
+
+## Citation
+
+If you use this code, please cite the archived release and the manuscript; if you use the evaluation
+data, please also cite the companion dataset:
+
+> Je J, Shim H, Nam Y, Kim Y, Kim BW, Hong P. Cardiovascular Diameter Auto-Measurement Pipeline
+> (v1.0.4) [Software]. Zenodo. DOI to be added after publication.
+
+> Je J, Shim H, Nam Y, Kim Y, Kim BW, Hong P. Evaluation-cohort data for "Rule-Based Automated
+> Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on
+> Non-ECG-Gated Contrast-Enhanced Chest CT" (Version 1.0) [Data set]. Zenodo.
+> DOI to be added after publication.
+
+A `CITATION.cff` file is included; GitHub renders it under "Cite this repository". Changes between
+releases are listed in `CHANGELOG.md`.
 
 ## Notes
 

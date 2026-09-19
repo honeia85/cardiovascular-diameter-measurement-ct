@@ -1,0 +1,70 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below and cite the accompanying article."
+type: software
+title: "Cardiovascular Diameter Auto-Measurement Pipeline"
+version: v1.0.4
+date-released: "2026-09-17"
+license: MIT
+repository-code: "https://github.com/honeia85/cardiovascular-diameter-measurement-ct"
+authors:
+  - family-names: Je
+    given-names: Jeongmo
+    orcid: "https://orcid.org/0009-0007-5253-2163"
+    affiliation: "Changwon National University"
+  - family-names: Shim
+    given-names: Hyeokjin
+    orcid: "https://orcid.org/0009-0002-0203-1903"
+    affiliation: "Changwon National University"
+  - family-names: Nam
+    given-names: Yoojin
+    orcid: "https://orcid.org/0000-0001-8565-1360"
+    affiliation: "University of Ulsan College of Medicine, Asan Medical Center"
+  - family-names: Kim
+    given-names: YangWon
+    orcid: "https://orcid.org/0009-0004-1123-9858"
+    affiliation: "Samsung Changwon Hospital, Sungkyunkwan University School of Medicine"
+  - family-names: Kim
+    given-names: Byung Wook
+    orcid: "https://orcid.org/0000-0002-4728-9011"
+    affiliation: "Changwon National University"
+  - family-names: Hong
+    given-names: Pa
+    orcid: "https://orcid.org/0000-0001-5495-5230"
+    affiliation: "Samsung Changwon Hospital, Sungkyunkwan University School of Medicine"
+preferred-citation:
+  type: article
+  title: "Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT: A Retrospective Reader-Referenced Agreement Study"
+  journal: "BMC Medical Imaging"
+  year: 2026
+  notes: "under revision; DOI to be added on publication"
+  authors:
+    - family-names: Je
+      given-names: Jeongmo
+    - family-names: Shim
+      given-names: Hyeokjin
+    - family-names: Nam
+      given-names: Yoojin
+    - family-names: Kim
+      given-names: YangWon
+    - family-names: Kim
+      given-names: Byung Wook
+    - family-names: Hong
+      given-names: Pa
+references:
+  - type: data
+    title: "Evaluation-cohort data for \"Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT\""
+    version: "1.0"
+    year: 2026
+    authors:
+      - family-names: Je
+        given-names: Jeongmo
+      - family-names: Shim
+        given-names: Hyeokjin
+      - family-names: Nam
+        given-names: Yoojin
+      - family-names: Kim
+        given-names: YangWon
+      - family-names: Kim
+        given-names: Byung Wook
+      - family-names: Hong
+        given-names: Pa

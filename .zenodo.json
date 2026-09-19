@@ -1,0 +1,82 @@
+{
+  "title": "Cardiovascular Diameter Auto-Measurement Pipeline: rule-based measurement of eight cardiovascular diameters from pretrained deep-learning segmentation on non-ECG-gated contrast-enhanced chest CT",
+  "upload_type": "software",
+  "version": "v1.0.4",
+  "license": "mit",
+  "description": "Measurement-pipeline code accompanying the manuscript 'Rule-Based Automated Measurement of Eight Cardiovascular Diameters from Pretrained Deep-Learning Segmentation on Non-ECG-Gated Contrast-Enhanced Chest CT: A Retrospective Reader-Referenced Agreement Study' (BMC Medical Imaging, under revision). Takes an axis-aligned LPS+ chest CT (NIfTI), runs the public pretrained TotalSegmentator heartchambers_highres model (not redistributed), and applies fixed rule-based level selection, centerline construction, and diameter selection to produce the diameters of PT, RPA, LPA, AA, LA, LV, RA, and RV with 3D Slicer markups. The repository contains code only: no imaging data, no derived measurement tables, and no model weights. v1.0.4 is the release that produced the measurements reported in the manuscript. Relative to v1.0.2, the release cited in the submitted manuscript, it serializes TotalSegmentator's mask export so that whether an examination completes no longer depends on host memory, and it measures a merged label map with no CT present. The documentation additionally discloses the development–evaluation overlap. The companion evaluation dataset is deposited separately on Zenodo; its DOI will be added after publication.",
+  "creators": [
+    {
+      "name": "Je, Jeongmo",
+      "affiliation": "Department of Information and Communication Engineering, Changwon National University, Changwon, Republic of Korea",
+      "orcid": "0009-0007-5253-2163"
+    },
+    {
+      "name": "Shim, Hyeokjin",
+      "affiliation": "Department of Information and Communication Engineering, Changwon National University, Changwon, Republic of Korea",
+      "orcid": "0009-0002-0203-1903"
+    },
+    {
+      "name": "Nam, Yoojin",
+      "affiliation": "Department of Radiology and Research Institute of Radiology, University of Ulsan College of Medicine, Asan Medical Center, Seoul, Republic of Korea",
+      "orcid": "0000-0001-8565-1360"
+    },
+    {
+      "name": "Kim, YangWon",
+      "affiliation": "Department of Radiology, Samsung Changwon Hospital, Sungkyunkwan University School of Medicine, Changwon, Republic of Korea",
+      "orcid": "0009-0004-1123-9858"
+    },
+    {
+      "name": "Kim, Byung Wook",
+      "affiliation": "Department of Information and Communication Engineering, Changwon National University, Changwon, Republic of Korea",
+      "orcid": "0000-0002-4728-9011"
+    },
+    {
+      "name": "Hong, Pa",
+      "affiliation": "Department of Radiology, Samsung Changwon Hospital, Sungkyunkwan University School of Medicine, Changwon, Republic of Korea",
+      "orcid": "0000-0001-5495-5230"
+    }
+  ],
+  "keywords": [
+    "chest CT",
+    "cardiovascular measurement",
+    "pulmonary artery",
+    "aorta",
+    "cardiac chambers",
+    "TotalSegmentator",
+    "rule-based measurement",
+    "reader-referenced agreement"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/honeia85/cardiovascular-diameter-measurement-ct/tree/v1.0.4",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "10.7937/VTW4-X588",
+      "relation": "references",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.7937/31V8-4A40",
+      "relation": "references",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.7937/K9/TCIA.2015.NPGZYZBZ",
+      "relation": "references",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.7937/K9/TCIA.2015.A6V7JIWX",
+      "relation": "references",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.1148/ryai.230024",
+      "relation": "references",
+      "scheme": "doi"
+    }
+  ],
+  "notes": "heartchambers_highres is a licensed TotalSegmentator task; users must obtain their own license key and weights. Source CT images are available from The Cancer Imaging Archive under CC BY-NC 4.0 (MIDRC-RICORD) and CC BY 3.0 (QIN LUNG CT, LungCT-Diagnosis)."
+}

@@ -109,6 +109,19 @@ class GeometryTests(unittest.TestCase):
             save_nifti(seg_path, dtype=np.uint8)
             run_pipeline.validate_geometry_pair(ct_path, seg_path)
 
+    def test_geometry_single_accepts_label_map_without_ct(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            seg_path = Path(tmp) / "case_seg.nii.gz"
+            save_nifti(seg_path, dtype=np.uint8)
+            run_pipeline.validate_geometry_single(seg_path)
+
+    def test_geometry_single_rejects_anisotropic_label_map(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            seg_path = Path(tmp) / "case_seg.nii.gz"
+            save_nifti(seg_path, affine=np.diag([-1.0, -2.0, 2.0, 1.0]), dtype=np.uint8)
+            with self.assertRaisesRegex(ValueError, "isotropic in-plane spacing"):
+                run_pipeline.validate_geometry_single(seg_path)
+
     def test_geometry_pair_rejects_shape_affine_orientation_and_anisotropy(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
@@ -192,6 +205,40 @@ class OutputSafetyTests(unittest.TestCase):
             command = run.call_args.args[0]
             self.assertIn("cpu", command)
             self.assertNotIn("--fast", command)
+            self.assertIn("--nr_thr_saving", command)
+            self.assertEqual(command[command.index("--nr_thr_saving") + 1], "1")
+
+    def test_ct_free_process_writes_version_and_null_ct(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            seg_path = tmp / "case_T_031_seg.nii.gz"
+            out_root = tmp / "out"
+            save_nifti(seg_path, dtype=np.uint8)
+            expected = {
+                name: {
+                    "diameter_mm": float(index + 1),
+                    "p1_lps": [0.0, 0.0, 0.0],
+                    "p2_lps": [1.0, 0.0, 0.0],
+                    "markup_file": f"{name}.mrk.json",
+                }
+                for index, name in enumerate(run_pipeline.STRUCTURES)
+            }
+            with (
+                mock.patch.object(run_pipeline, "measure_all"),
+                mock.patch.object(run_pipeline, "collect_results", return_value=(expected, [])),
+            ):
+                summary = run_pipeline.process_case(None, out_root, seg_override=seg_path)
+
+            self.assertEqual(summary["case"], "case_T_031")
+            self.assertEqual(summary["pipeline_version"], "v1.0.4")
+            self.assertIsNone(summary["input_ct"])
+            saved = json.loads(
+                (out_root / "case_T_031" / "case_T_031_measurements.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(saved["pipeline_version"], "v1.0.4")
+            self.assertIsNone(saved["input_ct"])
 
     def test_stale_markups_are_removed(self):
         with tempfile.TemporaryDirectory() as tmp:

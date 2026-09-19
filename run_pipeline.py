@@ -20,6 +20,7 @@ Usage:
     python run_pipeline.py -i ct.nii.gz -o ./out
     python run_pipeline.py -i ./ct_folder -o ./out                  # every case in a folder
     python run_pipeline.py -i ct.nii.gz -o ./out --seg seg.nii.gz   # reuse a segmentation
+    python run_pipeline.py --seg case_seg.nii.gz -o ./out            # measure a label map without CT
     python run_pipeline.py -i ct.nii.gz -o ./out -d cpu
 """
 import argparse
@@ -50,6 +51,7 @@ TOTALSEG_EXE = (
     or "TotalSegmentator"
 )
 TASK = "heartchambers_highres"
+PIPELINE_VERSION = "v1.0.4"
 DEVICE = "gpu:0"
 MIN_VOXELS = 100          # QC threshold: below this, the structure is unusable
 
@@ -82,37 +84,47 @@ def case_name_of(path: Path) -> str:
     return path.stem
 
 
+def _validate_volume(image, label: str) -> None:
+    """Reject a volume that is not a 3-D, axis-aligned LPS+ NIfTI."""
+    if len(image.shape) != 3:
+        raise ValueError(f"{label} must be a 3D NIfTI volume; got {image.shape}")
+    if not np.all(np.isfinite(image.affine)):
+        raise ValueError(f"{label} affine contains non-finite values")
+    codes = tuple(nib.aff2axcodes(image.affine))
+    if codes != ("L", "P", "S"):
+        raise ValueError(f"{label} must use LPS+ voxel orientation; got {codes}")
+    linear = np.asarray(image.affine[:3, :3], dtype=float)
+    column_norms = np.linalg.norm(linear, axis=0)
+    if not np.all(np.isfinite(column_norms)) or np.any(column_norms <= 0):
+        raise ValueError(f"{label} affine has invalid spatial axes")
+    directions = linear / column_norms
+    if not np.allclose(
+        directions, np.diag([-1.0, -1.0, 1.0]), rtol=0.0, atol=1e-5
+    ):
+        raise ValueError(
+            f"{label} affine must be axis-aligned LPS+; oblique/sheared input is unsupported"
+        )
+    spacing = np.asarray(image.header.get_zooms()[:3], dtype=float)
+    if spacing.shape != (3,) or not np.all(np.isfinite(spacing)) or np.any(spacing <= 0):
+        raise ValueError(f"{label} has invalid voxel spacing: {spacing.tolist()}")
+    if not np.isclose(spacing[0], spacing[1], rtol=1e-5, atol=1e-6):
+        raise ValueError(
+            f"{label} requires isotropic in-plane spacing; got "
+            f"{spacing[0]:.9g} x {spacing[1]:.9g} mm"
+        )
+
+
+def validate_geometry_single(seg_path: Path) -> None:
+    """Reject a supplied label map that is not a valid measurement volume."""
+    _validate_volume(nib.load(str(seg_path)), "segmentation")
+
+
 def validate_geometry_pair(ct_path: Path, seg_path: Path) -> None:
     """Reject CT/segmentation pairs that are not matching LPS+ volumes."""
     ct_img = nib.load(str(ct_path))
     seg_img = nib.load(str(seg_path))
-    for label, image in (("CT", ct_img), ("segmentation", seg_img)):
-        if len(image.shape) != 3:
-            raise ValueError(f"{label} must be a 3D NIfTI volume; got {image.shape}")
-        if not np.all(np.isfinite(image.affine)):
-            raise ValueError(f"{label} affine contains non-finite values")
-        codes = tuple(nib.aff2axcodes(image.affine))
-        if codes != ("L", "P", "S"):
-            raise ValueError(f"{label} must use LPS+ voxel orientation; got {codes}")
-        linear = np.asarray(image.affine[:3, :3], dtype=float)
-        column_norms = np.linalg.norm(linear, axis=0)
-        if not np.all(np.isfinite(column_norms)) or np.any(column_norms <= 0):
-            raise ValueError(f"{label} affine has invalid spatial axes")
-        directions = linear / column_norms
-        if not np.allclose(
-            directions, np.diag([-1.0, -1.0, 1.0]), rtol=0.0, atol=1e-5
-        ):
-            raise ValueError(
-                f"{label} affine must be axis-aligned LPS+; oblique/sheared input is unsupported"
-            )
-        spacing = np.asarray(image.header.get_zooms()[:3], dtype=float)
-        if spacing.shape != (3,) or not np.all(np.isfinite(spacing)) or np.any(spacing <= 0):
-            raise ValueError(f"{label} has invalid voxel spacing: {spacing.tolist()}")
-        if not np.isclose(spacing[0], spacing[1], rtol=1e-5, atol=1e-6):
-            raise ValueError(
-                f"{label} requires isotropic in-plane spacing; got "
-                f"{spacing[0]:.9g} x {spacing[1]:.9g} mm"
-            )
+    _validate_volume(ct_img, "CT")
+    _validate_volume(seg_img, "segmentation")
     if ct_img.shape[:3] != seg_img.shape[:3]:
         raise ValueError(
             f"CT/segmentation shape mismatch: {ct_img.shape[:3]} vs {seg_img.shape[:3]}"
@@ -133,6 +145,9 @@ def run_totalseg(ct_path: Path, seg_dir: Path, device: str = DEVICE) -> Path:
         )
     seg_dir.mkdir(parents=True, exist_ok=True)
     cmd = [TOTALSEG_EXE, "-i", str(ct_path), "-o", str(seg_dir), "-ta", TASK]
+    # Serialize mask export to avoid one full-resolution float64 label volume per
+    # worker. This is also the setting used for the reported v1.0.4 measurements.
+    cmd += ["--nr_thr_saving", "1"]
     if device == "cpu":
         # heartchambers_highres is incompatible with TotalSegmentator --fast.
         cmd += ["-d", "cpu"]
@@ -255,9 +270,14 @@ def calculate_ratios(measurements):
     return ratios
 
 
-def process_case(ct_path: Path, out_root: Path, seg_override: Path = None,
+def process_case(ct_path: Path | None, out_root: Path, seg_override: Path = None,
                  device: str = DEVICE):
-    case = case_name_of(ct_path)
+    source_path = ct_path if ct_path is not None else seg_override
+    if source_path is None:
+        raise ValueError("either a CT input or a merged segmentation is required")
+    case = case_name_of(source_path)
+    if ct_path is None and case.endswith("_seg"):
+        case = case[:-4]
     out_dir = out_root / case
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
@@ -275,7 +295,10 @@ def process_case(ct_path: Path, out_root: Path, seg_override: Path = None,
         log.info("Merging labels")
         counts, weak = merge_and_qc(seg_dir, merged_path)
 
-    validate_geometry_pair(ct_path, merged_path)
+    if ct_path is None:
+        validate_geometry_single(merged_path)
+    else:
+        validate_geometry_pair(ct_path, merged_path)
 
     log.info("Measuring")
     measure_all(merged_path, out_dir)
@@ -287,7 +310,8 @@ def process_case(ct_path: Path, out_root: Path, seg_override: Path = None,
     img = nib.load(str(merged_path))
     summary = {
         "case": case,
-        "input_ct": str(ct_path),
+        "pipeline_version": PIPELINE_VERSION,
+        "input_ct": str(ct_path) if ct_path is not None else None,
         "segmentation": str(merged_path),
         "task": TASK,
         "created": datetime.now().isoformat(timespec="seconds"),
@@ -318,7 +342,7 @@ def find_cts(input_path: Path):
 def main():
     ap = argparse.ArgumentParser(
         description="Measure 8 cardiac structures from a chest CT NIfTI and write JSON")
-    ap.add_argument("-i", "--input", required=True, help="CT .nii/.nii.gz file or a folder")
+    ap.add_argument("-i", "--input", required=False, help="CT .nii/.nii.gz file or a folder")
     ap.add_argument("-o", "--output", default="./pipeline_out", help="output folder")
     ap.add_argument("--seg", default=None,
                     help="merged label (1-6) segmentation file; skips TotalSegmentator "
@@ -326,17 +350,21 @@ def main():
     ap.add_argument("-d", "--device", default=DEVICE, help="gpu:0 | cpu")
     args = ap.parse_args()
 
-    input_path = Path(args.input)
+    input_path = Path(args.input) if args.input else None
     out_root = Path(args.output)
     out_root.mkdir(parents=True, exist_ok=True)
     add_file_log(out_root)
 
-    cts = find_cts(input_path)
-    if not cts:
+    seg_override = Path(args.seg) if args.seg else None
+    if input_path is None and seg_override is None:
+        log.error("either --input or --seg is required")
+        sys.exit(2)
+
+    cts = find_cts(input_path) if input_path is not None else [None]
+    if input_path is not None and not cts:
         log.error(f"No CT files found: {input_path}")
         sys.exit(1)
 
-    seg_override = Path(args.seg) if args.seg else None
     if seg_override is not None and len(cts) > 1:
         log.error("--seg can only be used with a single case.")
         sys.exit(1)
@@ -344,12 +372,16 @@ def main():
     log.info(f"{len(cts)} case(s)")
     ok, fail = [], []
     for ct in cts:
+        display_path = ct if ct is not None else seg_override
+        display_name = case_name_of(display_path)
+        if ct is None and display_name.endswith("_seg"):
+            display_name = display_name[:-4]
         try:
             process_case(ct, out_root, seg_override=seg_override, device=args.device)
-            ok.append(ct.name)
+            ok.append(display_name)
         except Exception as e:
-            log.error(f"Failed: {ct.name}: {e}")
-            fail.append({"case": ct.name, "error": str(e)})
+            log.error(f"Failed: {display_name}: {e}")
+            fail.append({"case": display_name, "error": str(e)})
 
     log.info(f"All done: {len(ok)} succeeded / {len(fail)} failed")
     if fail:
